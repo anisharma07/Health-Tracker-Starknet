@@ -26,6 +26,9 @@ import {
   wifiOutline,
   cloudOfflineOutline,
   downloadOutline,
+  wallet,
+  shield,
+  card,
 } from "ionicons/icons";
 import Menu from "../components/Menu/Menu";
 import { useTheme } from "../contexts/ThemeContext";
@@ -33,6 +36,14 @@ import { useHistory } from "react-router-dom";
 import { usePWA } from "../hooks/usePWA";
 import { resetUserOnboarding } from "../utils/helper";
 import { getAutoSaveEnabled, setAutoSaveEnabled } from "../utils/settings";
+import WalletConnection from "../components/wallet/WalletConnection";
+import SubscriptionPlans from "../components/wallet/SubscriptionPlans";
+import MedTokenBalance from "../components/wallet/MedTokenBalance";
+import { useAccount } from "@starknet-react/core";
+import {
+  useGetUserFiles,
+  useGetUserSubscriptionSummary,
+} from "../hooks/useContractRead";
 import "./SettingsPage.css";
 
 const SettingsPage: React.FC = () => {
@@ -46,8 +57,19 @@ const SettingsPage: React.FC = () => {
   const [globalAutoSaveEnabled, setGlobalAutoSaveEnabled] = useState(
     getAutoSaveEnabled()
   );
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   const { isInstallable, isInstalled, isOnline, installApp } = usePWA();
+
+  // Blockchain-related state
+  const { address, status } = useAccount();
+  const { files } = useGetUserFiles({
+    accountAddress: address as `0x${string}`,
+  });
+  const { subscriptionSummary } = useGetUserSubscriptionSummary({
+    accountAddress: address as `0x${string}`,
+  });
+  const isConnected = status === "connected" && address;
 
   const handleNotificationPermission = async () => {
     try {
@@ -167,6 +189,96 @@ const SettingsPage: React.FC = () => {
             </IonCard>
           </div>
 
+          {/* Blockchain Settings Card */}
+          <div style={{ marginBottom: "16px" }}>
+            <IonCard>
+              <IonCardHeader>
+                <IonCardTitle
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    color: "var(--ion-color-primary)",
+                  }}
+                >
+                  <IonIcon icon={wallet} style={{ fontSize: "1.2em" }} />
+                  Blockchain Settings
+                </IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent>
+                {!isConnected ? (
+                  <IonList className="settings-list">
+                    <IonItem>
+                      <IonIcon icon={wallet} slot="start" />
+                      <IonLabel>
+                        <h3>Connect Wallet</h3>
+                        <p>
+                          Connect your Starknet wallet to access blockchain
+                          features
+                        </p>
+                      </IonLabel>
+                      <WalletConnection />
+                    </IonItem>
+                  </IonList>
+                ) : (
+                  <IonList className="settings-list">
+                    <IonItem>
+                      <IonIcon icon={wallet} slot="start" />
+                      <IonLabel>
+                        <h3>Wallet Status</h3>
+                        <p>
+                          Connected: {address?.slice(0, 8)}...
+                          {address?.slice(-6)}
+                        </p>
+                      </IonLabel>
+                      <WalletConnection />
+                    </IonItem>
+
+                    <IonItem>
+                      <IonIcon icon={card} slot="start" />
+                      <IonLabel>
+                        <h3>Token Balance</h3>
+                        <MedTokenBalance />
+                      </IonLabel>
+                    </IonItem>
+
+                    <IonItem>
+                      <IonIcon icon={shield} slot="start" />
+                      <IonLabel>
+                        <h3>Blockchain Files</h3>
+                        <p>{files?.length || 0} files stored on Starknet</p>
+                      </IonLabel>
+                    </IonItem>
+
+                    {subscriptionSummary && (
+                      <IonItem>
+                        <IonIcon icon={informationCircle} slot="start" />
+                        <IonLabel>
+                          <h3>Storage Usage</h3>
+                          <p>
+                            {subscriptionSummary[0].toString()}/
+                            {subscriptionSummary[1].toString()} files used
+                          </p>
+                        </IonLabel>
+                      </IonItem>
+                    )}
+
+                    <IonItem
+                      button
+                      onClick={() => setShowSubscriptionModal(true)}
+                    >
+                      <IonIcon icon={card} slot="start" />
+                      <IonLabel>
+                        <h3>Subscription Plans</h3>
+                        <p>Manage your subscription</p>
+                      </IonLabel>
+                    </IonItem>
+                  </IonList>
+                )}
+              </IonCardContent>
+            </IonCard>
+          </div>
+
           {/* PWA Status Card */}
           <div className="signature-section" style={{ marginBottom: "20px" }}>
             <IonCard
@@ -228,6 +340,12 @@ const SettingsPage: React.FC = () => {
         {/* Menu Component (Action Sheet) */}
         <Menu showM={showMenu} setM={() => setShowMenu(false)} />
       </IonContent>
+
+      {/* Subscription Modal */}
+      <SubscriptionPlans
+        isOpen={showSubscriptionModal}
+        onDidDismiss={() => setShowSubscriptionModal(false)}
+      />
 
       {/* Toast for notifications */}
       <IonToast

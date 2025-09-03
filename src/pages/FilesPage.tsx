@@ -27,6 +27,7 @@ import {
   filterOutline,
   moon,
   sunny,
+  fitness,
 } from "ionicons/icons";
 import Files from "../components/Files/Files";
 import { useTheme } from "../contexts/ThemeContext";
@@ -38,6 +39,7 @@ import "./FilesPage.css";
 import { useHistory } from "react-router-dom";
 import { File } from "../components/Storage/LocalStorage";
 import TemplateModal from "../components/TemplateModal/TemplateModal";
+import WalletConnection from "../components/wallet/WalletConnection";
 const FilesPage: React.FC = () => {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { selectedFile, store, updateSelectedFile, updateBillType } =
@@ -867,6 +869,14 @@ const FilesPage: React.FC = () => {
             Health Tracker
           </IonTitle>
           <IonButtons slot="end">
+            <IonButton
+              fill="clear"
+              onClick={() => history.push("/app/health-data")}
+              style={{ fontSize: "1.2em" }}
+            >
+              <IonIcon icon={fitness} />
+            </IonButton>
+            <WalletConnection />
             <IonButton
               fill="clear"
               onClick={toggleDarkMode}

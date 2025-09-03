@@ -1,20 +1,10 @@
-# � Health Tracker App
+# 🏥 Health Tracker - Starknet Integration
 
-A comprehensive Progressive Web Application (PWA) built with Ionic 8 and React for health monitoring, nutrition tracking, weight management, and exercise logging with advanced offline capabilities, modern UI/UX, and cross-platform compatibility.
+A comprehensive Progressive Web Application (PWA) built with Ionic 8 and React for health monitoring, nutrition tracking, weight management, and exercise logging with **blockchain integration via Starknet**. Features advanced offline capabilities, modern UI/UX, cross-platform compatibility, and decentralized data storage.
 
 ## Project Overview
 
-The Health Tracker Solution MVP is a modern, feature-rich health monitoring application designed for individuals seeking to improve their wellness journey. Built as a Progressive Web App, it provides a native app-like experience while maintaining web accessibility and cross-platform compatibility.
-
-## Device Support (Web, Android, Ios, PWA)
-
-```mermaid
-flowchart TD
-    A([💻 Device Support]) --> B[Desktop Web]
-    A --> C[Android]
-    A --> D[iOS]
-    A --> E[PWA]
-```
+The Health Tracker Solution MVP is a modern, feature-rich health monitoring application designed for individuals seeking to improve their wellness journey with blockchain-powered data security. Built as a Progressive Web App with Starknet integration, it provides a native app-like experience while maintaining web accessibility, cross-platform compatibility, and decentralized storage capabilities.
 
 ## 🗂️ Project Structure
 
@@ -25,14 +15,36 @@ src/
 │   ├── FileMenu/        # File operations menu
 │   ├── Menu/            # Application menu
 │   ├── socialcalc/      # Spreadsheet engine for health data
-│   └── Storage/         # Local storage management
+│   ├── Storage/         # Local storage management
+│   └── wallet/          # Blockchain wallet components
 ├── contexts/            # React contexts for state management
-├── hooks/               # Custom React hooks
+├── hooks/               # Custom React hooks + blockchain hooks
 ├── pages/              # Main application pages
+│   └── HealthDataPage.tsx # Blockchain-enabled health data
 ├── services/           # Application services
 ├── theme/              # CSS themes and variables
-└── utils/              # Utility functions
+├── utils/              # Utility functions
+│   └── ipfs.ts         # IPFS integration for decentralized storage
+├── abis/               # Smart contract ABIs
+└── providers/          # Starknet providers
 ```
+
+## 🌟 Blockchain Features
+
+### 🔗 Starknet Integration
+
+- **Wallet Connection**: Connect with Argent X, Braavos, and other Starknet wallets
+- **Decentralized Storage**: Store health data on IPFS with blockchain indexing
+- **Token System**: MED tokens for subscription-based access
+- **Smart Contracts**: Secure file storage and subscription management
+- **Subscription Plans**: Tiered access to blockchain features
+
+### 🔐 Security & Privacy
+
+- **IPFS Storage**: Decentralized file storage via Pinata gateway
+- **Blockchain Immutability**: Tamper-proof health records
+- **Wallet Authentication**: Secure access through blockchain wallets
+- **Encrypted Data**: Health data encryption before IPFS upload
 
 # C4GT DMP'25 Contributions:
 
@@ -55,6 +67,16 @@ src/
 | **11** | **Health Templates**      | Pre-built templates for common health and fitness goals                  | [📄 View Details](.github/11.HEALTH_TEMPLATES.md)  |
 | **12** | **Data Backup & Sync**    | Cloud backup with data synchronization across devices                    | [📄 View Details](.github/12.DATA_SYNC.md)         |
 | **13** | **Graph Visualization**   | Interactive charts for nutrition data with bar and pie chart views       | [📄 View Details](GRAPH_VISUALIZATION_README.md)   |
+
+### 🔗 Blockchain Features (NEW)
+
+| #      | Feature                  | Description                                                          | Documentation                                         |
+| ------ | ------------------------ | -------------------------------------------------------------------- | ----------------------------------------------------- |
+| **14** | **Starknet Integration** | Connect Starknet wallets (Argent X, Braavos) for blockchain features | [📄 View Details](.github/14.STARKNET_INTEGRATION.md) |
+| **15** | **IPFS Storage**         | Decentralized file storage via Pinata gateway for health data        | [📄 View Details](.github/15.IPFS_STORAGE.md)         |
+| **16** | **Token Subscriptions**  | MED token-based subscription system for premium features             | [📄 View Details](.github/16.TOKEN_SUBSCRIPTIONS.md)  |
+| **17** | **Health Data on Chain** | Store health records immutably on Starknet blockchain                | [📄 View Details](.github/17.HEALTH_DATA_CHAIN.md)    |
+| **18** | **Smart Contracts**      | Contract-based file management and subscription handling             | [📄 View Details](.github/18.SMART_CONTRACTS.md)      |
 
 ## 1. Health Tracking Features
 
@@ -207,6 +229,80 @@ ionic capacitor run android -l --external
 ionic capacitor run ios -l --external
 ```
 
+## 🚀 Quick Start with Blockchain Features
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+- Starknet wallet (Argent X or Braavos)
+- Pinata account for IPFS storage
+
+### Installation
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/anisharma07/Health-Tracker-Starknet.git
+cd Health-Tracker-Starknet
+```
+
+2. **Install dependencies**
+
+```bash
+npm install
+```
+
+3. **Environment Setup**
+   Copy `.env.example` to `.env` and configure:
+
+```bash
+cp .env.example .env
+```
+
+Add your Pinata credentials:
+
+```env
+VITE_PINATA_API_KEY=your_pinata_api_key_here
+VITE_PINATA_SECRET_KEY=your_pinata_secret_key_here
+VITE_PINATA_JWT=your_pinata_jwt_token_here
+VITE_PINATA_GATEWAY=https://gateway.pinata.cloud
+VITE_STARKNET_NETWORK=sepolia
+```
+
+4. **Start the development server**
+
+```bash
+npm run dev
+```
+
+5. **Access the application**
+   Open [http://localhost:5173](http://localhost:5173) in your browser
+
+### Blockchain Setup
+
+1. **Install a Starknet Wallet**
+
+   - [Argent X](https://chrome.google.com/webstore/detail/argent-x/dlcobpjiigpikoobohmabehhmhfoodbb)
+   - [Braavos](https://chrome.google.com/webstore/detail/braavos-wallet/jnlgamecbpmbajjfhmmmlhejkemejdma)
+
+2. **Get Test Tokens**
+
+   - Switch to Sepolia testnet in your wallet
+   - Get test ETH from [Starknet Faucet](https://faucet.goerli.starknet.io/)
+
+3. **Setup Pinata Account**
+   - Create account at [Pinata Cloud](https://pinata.cloud)
+   - Generate API keys
+   - Add keys to your `.env` file
+
+### Usage
+
+1. **Connect Wallet**: Click the wallet icon in the top navigation
+2. **Add Health Data**: Navigate to Health Data page and start logging
+3. **Save to Blockchain**: Click "Save to Blockchain" to store data on IPFS and Starknet
+4. **Manage Subscription**: Visit Settings to manage your subscription plan
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -223,6 +319,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Built with [Ionic Framework](https://ionicframework.com/)
 - Powered by [React](https://reactjs.org/)
+- Blockchain integration via [Starknet](https://starknet.io/)
+- Decentralized storage with [IPFS](https://ipfs.io/) and [Pinata](https://pinata.cloud/)
 - Spreadsheet functionality by [SocialCalc](https://socialcalc.org/)
 - PWA capabilities with [Vite PWA Plugin](https://vite-pwa-org.netlify.app/)
 
@@ -233,4 +331,5 @@ For support, email the Contributor [anis42390@gmail.com] or create an issue in t
 ---
 
 **Made with ❤️ under C4GT DMP'25 Program - Your Health, Your Journey**
+
 # Health-Tracker-Starknet

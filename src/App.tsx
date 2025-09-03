@@ -4,10 +4,12 @@ import { Route, Redirect } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Home from "./pages/Home";
 import FilesPage from "./pages/FilesPage";
+import HealthDataPage from "./pages/HealthDataPage";
 import SettingsPage from "./pages/SettingsPage";
 import LandingPage from "./pages/LandingPage";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import { InvoiceProvider } from "./contexts/InvoiceContext";
+import { StarknetProvider } from "./providers/StarknetProvider";
 import PWAUpdatePrompt from "./components/PWAUpdatePrompt";
 import OfflineIndicator from "./components/OfflineIndicator";
 import { usePWA } from "./hooks/usePWA";
@@ -78,6 +80,9 @@ const AppContent: React.FC = () => {
                 <Route exact path="/app/files">
                   <FilesPage />
                 </Route>
+                <Route exact path="/app/health-data">
+                  <HealthDataPage />
+                </Route>
                 <Route exact path="/app/settings">
                   <SettingsPage />
                 </Route>
@@ -96,7 +101,9 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => (
   <ThemeProvider>
-    <AppContent />
+    <StarknetProvider>
+      <AppContent />
+    </StarknetProvider>
   </ThemeProvider>
 );
 

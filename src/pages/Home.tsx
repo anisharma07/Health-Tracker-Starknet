@@ -25,6 +25,7 @@ import {
   IonItem,
   IonCheckbox,
   isPlatform,
+  IonLoading,
 } from "@ionic/react";
 import { DATA } from "../templates";
 import * as AppGeneral from "../components/socialcalc/index.js";
@@ -46,6 +47,10 @@ import {
   toggleOutline,
   saveSharp,
   statsChart,
+  cloud,
+  cloudDone,
+  shield,
+  wallet,
 } from "ionicons/icons";
 import "./Home.css";
 import FileOptions from "../components/FileMenu/FileOptions";
@@ -59,6 +64,16 @@ import { isQuotaExceededError, getQuotaExceededMessage } from "../utils/helper";
 import { getAutoSaveEnabled } from "../utils/settings";
 import { SheetChangeMonitor } from "../utils/sheetChangeMonitor";
 import { backgroundClip } from "html2canvas/dist/types/css/property-descriptors/background-clip";
+// Blockchain imports
+import { useAccount } from "@starknet-react/core";
+import { useSaveFile } from "../hooks/useContractWrite";
+import {
+  useGetUserFiles,
+  useGetUserSubscriptionSummary,
+  useGetUserFileLimits,
+} from "../hooks/useContractRead";
+import { uploadJSONToIPFS, getIPFSUrl, downloadFromIPFS } from "../utils/ipfs";
+import WalletConnection from "../components/wallet/WalletConnection";
 
 const Home: React.FC = () => {
   const { isDarkMode } = useTheme();
@@ -107,6 +122,34 @@ const Home: React.FC = () => {
   const [customColorInput, setCustomColorInput] = useState("");
   const [activeBackgroundColor, setActiveBackgroundColor] = useState("#f4f5f8");
   const [activeFontColor, setActiveFontColor] = useState("#000000");
+
+  // Blockchain state
+  const { address, status } = useAccount();
+  const {
+    saveFile: saveToBlockchain,
+    isPending: isSavingToBlockchain,
+    error: blockchainSaveError,
+  } = useSaveFile();
+  const { files: blockchainFiles, refetchFiles } = useGetUserFiles({
+    accountAddress: address as `0x${string}`,
+  });
+  const { subscriptionSummary } = useGetUserSubscriptionSummary({
+    accountAddress: address as `0x${string}`,
+  });
+  const { fileLimits } = useGetUserFileLimits({
+    accountAddress: address as `0x${string}`,
+  });
+
+  const [showBlockchainSaveDialog, setShowBlockchainSaveDialog] =
+    useState(false);
+  const [blockchainFileName, setBlockchainFileName] = useState("");
+  const [showLoadFromBlockchainDialog, setShowLoadFromBlockchainDialog] =
+    useState(false);
+  const [selectedBlockchainFile, setSelectedBlockchainFile] =
+    useState<any>(null);
+  const [isLoadingFromBlockchain, setIsLoadingFromBlockchain] = useState(false);
+
+  const isWalletConnected = status === "connected" && address;
 
   // Actions popover state
   const [showActionsPopover, setShowActionsPopover] = useState(false);
@@ -416,6 +459,163 @@ const Home: React.FC = () => {
       }
       setToastColor("danger");
       setShowToast(true);
+    }
+  };
+
+  // Blockchain save functionality
+  const handleSaveToBlockchain = async () => {
+    if (!isWalletConnected) {
+      setToastMessage("Please connect your wallet first");
+      setToastColor("warning");
+      setShowToast(true);
+      return;
+    }
+
+    // Check subscription limits
+    if (fileLimits) {
+      const [filesUsed, filesAllowed] = fileLimits;
+      if (filesUsed >= filesAllowed) {
+        setToastMessage(
+          "Storage limit reached. Please upgrade your subscription."
+        );
+        setToastColor("warning");
+        setShowToast(true);
+        return;
+      }
+    }
+
+    setBlockchainFileName(fileName || `file-${Date.now()}`);
+    setShowBlockchainSaveDialog(true);
+  };
+
+  const executeSaveToBlockchain = async (saveFileName: string) => {
+    if (!isWalletConnected) return;
+
+    try {
+      // Get current spreadsheet content
+      const socialCalc = (window as any).SocialCalc;
+      if (!socialCalc || !socialCalc.GetCurrentWorkBookControl) {
+        setToastMessage("Spreadsheet not ready. Please wait and try again.");
+        setToastColor("warning");
+        setShowToast(true);
+        return;
+      }
+
+      const control = socialCalc.GetCurrentWorkBookControl();
+      if (!control || !control.workbook || !control.workbook.spreadsheet) {
+        setToastMessage("Spreadsheet not ready. Please wait and try again.");
+        setToastColor("warning");
+        setShowToast(true);
+        return;
+      }
+
+      const content = AppGeneral.getSpreadsheetContent();
+
+      // Prepare data for IPFS
+      const fileData = {
+        fileName: saveFileName,
+        content: content,
+        templateId: activeTemplateData?.templateId || billType,
+        billType: billType,
+        created: new Date().toISOString(),
+        modified: new Date().toISOString(),
+        version: "1.0",
+        metadata: {
+          appName: "Health Tracker",
+          appVersion: "1.0.0",
+          templateName: activeTemplateData?.template || "Unknown Template",
+          currentSheet: currentSheetId || "sheet1",
+        },
+      };
+
+      // Upload to IPFS
+      console.log("Uploading file to IPFS:", saveFileName);
+      const ipfsHash = await uploadJSONToIPFS(fileData, saveFileName);
+      console.log("IPFS upload successful:", ipfsHash);
+
+      // Save to blockchain
+      console.log("Saving to blockchain:", saveFileName, ipfsHash);
+      await saveToBlockchain(saveFileName, ipfsHash);
+
+      // Refresh blockchain files list
+      refetchFiles();
+
+      setToastMessage(
+        `File "${saveFileName}" saved to blockchain successfully!`
+      );
+      setToastColor("success");
+      setShowToast(true);
+
+      setShowBlockchainSaveDialog(false);
+      setBlockchainFileName("");
+    } catch (error: any) {
+      console.error("Error saving to blockchain:", error);
+      setToastMessage(error.message || "Failed to save to blockchain");
+      setToastColor("danger");
+      setShowToast(true);
+    }
+  };
+
+  // Load from blockchain functionality
+  const handleLoadFromBlockchain = () => {
+    if (!isWalletConnected) {
+      setToastMessage("Please connect your wallet first");
+      setToastColor("warning");
+      setShowToast(true);
+      return;
+    }
+
+    setShowLoadFromBlockchainDialog(true);
+  };
+
+  const executeLoadFromBlockchain = async (fileRecord: any) => {
+    if (!fileRecord) return;
+
+    setIsLoadingFromBlockchain(true);
+    try {
+      console.log("Loading file from IPFS:", fileRecord.ipfs_cid);
+
+      // Download from IPFS
+      const ipfsData = await downloadFromIPFS(fileRecord.ipfs_cid);
+      const fileData = JSON.parse(ipfsData);
+
+      console.log("File data retrieved from IPFS:", fileData);
+
+      // Load the content into the spreadsheet
+      const socialCalc = (window as any).SocialCalc;
+      if (socialCalc && socialCalc.GetCurrentWorkBookControl) {
+        const control = socialCalc.GetCurrentWorkBookControl();
+        if (control && control.workbook && control.workbook.spreadsheet) {
+          // Set the spreadsheet content using viewFile
+          AppGeneral.viewFile(fileData.fileName, fileData.content);
+
+          // Update template data if available
+          if (fileData.templateId && DATA[fileData.templateId]) {
+            const templateData = DATA[fileData.templateId];
+            updateActiveTemplateData(templateData);
+            updateBillType(fileData.billType || 1);
+          }
+
+          // Update current file name
+          updateSelectedFile(fileData.fileName);
+
+          setToastMessage(
+            `File "${fileData.fileName}" loaded from blockchain successfully!`
+          );
+          setToastColor("success");
+          setShowToast(true);
+        }
+      }
+
+      setShowLoadFromBlockchainDialog(false);
+      setSelectedBlockchainFile(null);
+    } catch (error: any) {
+      console.error("Error loading from blockchain:", error);
+      setToastMessage(error.message || "Failed to load from blockchain");
+      setToastColor("danger");
+      setShowToast(true);
+    } finally {
+      setIsLoadingFromBlockchain(false);
     }
   };
 

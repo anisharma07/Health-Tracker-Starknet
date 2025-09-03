@@ -26,8 +26,11 @@
     "@capacitor/share": "^6.0.0",
     "@ionic/react": "^8.0.0",
     "@ionic/react-router": "^8.0.0",
+    "@starknet-react/chains": "^5.0.1",
+    "@starknet-react/core": "^5.0.1",
     "@types/crypto-js": "^4.2.2",
     "@types/react-router-dom": "^5.3.3",
+    "axios": "^1.11.0",
     "capacitor-email-composer": "^6.0.0",
     "chart.js": "^4.5.0",
     "crypto-js": "^4.2.0",
@@ -38,7 +41,8 @@
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^18.3.0",
     "react-router": "^5.3.4",
-    "react-router-dom": "^5.3.4"
+    "react-router-dom": "^5.3.4",
+    "starknet": "^8.5.2"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.0.0",
